@@ -12,3 +12,13 @@ It takes a user’s text prompt, refines it into a detailed and structured descr
 - **End-to-End Automation** – No manual editing required from text to video.
 
 ![Workflow Screenshot](Screenshot1.png)
+
+
+
+## 📥 How to Import into n8n
+
+1. **Open n8n** in your browser or desktop app.
+2. Click **"New Workflow"**.
+3. In the top right menu (⋮), select **"Import from File"**.
+4. Select the `.json` file from the `workflows/` folder of this repository.
+5. Click **"Execute Workflow"** to test.

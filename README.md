@@ -1,6 +1,6 @@
 # PGC-Workflow
 
-An automated **Platform Generated Content (PGC)** creation workflow built in [n8n](http://).  
+An automated **Platform Generated Content (PGC)** creation workflow built in [n8n](https://n8n.io).  
 It takes a user’s text prompt, refines it into a detailed and structured description with consistent characters, generates AI images, and stitches them together into a short video.
 
 

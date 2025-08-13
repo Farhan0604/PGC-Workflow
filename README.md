@@ -12,3 +12,4 @@ It takes a user’s text prompt, refines it into a detailed and structured descr
 - **End-to-End Automation** – No manual editing required from text to video.
 
 
+![Workflow Screenshot](assets/screenshot1.png)

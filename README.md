@@ -11,4 +11,4 @@ It takes a user’s text prompt, refines it into a detailed and structured descr
 - **Automated Video Creation** – Stitches generated images into a short, cohesive video file.
 - **End-to-End Automation** – No manual editing required from text to video.
 
-![Workflow Screenshot](screenshot1.png)
+![Workflow Screenshot](Screenshot1.png)

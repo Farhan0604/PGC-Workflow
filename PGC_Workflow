@@ -1,0 +1,741 @@
+{
+  "name": "PGC - Work Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -640,
+        -380
+      ],
+      "id": "94f83fec-5704-434e-a333-5230ade742d2",
+      "name": "When chat message received",
+      "webhookId": "d933f7ec-958f-4ef0-9f91-0d9c00665346"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        -160
+      ],
+      "id": "65a40202-73d0-4e54-821e-c1c6e64a0b58",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IeY5MCqT2xiSHdfR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -100
+      ],
+      "id": "f8c2fdac-4ab5-43c3-b9e1-32fdda3b49f3",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IeY5MCqT2xiSHdfR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const predictions = $input.first().json.predictions; // array of 4 base64 strings\n\nreturn predictions.map((prediction, index) => {\n  return {\n    binary: {\n      image: {\n        data: prediction.bytesBase64Encoded,\n        mimeType: 'image/png', // or 'image/jpeg' if needed\n        fileName: `generated_image_${index + 1}.png`\n      }\n    },\n    json: {\n      index: index\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        2480
+      ],
+      "id": "7e8cbcdd-e188-42cc-8ddb-04913686b57b",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "generated_image.png",
+        "dataPropertyName": "image",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        260,
+        4760
+      ],
+      "id": "06d5d282-8c1c-4818-9fec-283d4b0754d0",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -1160,
+        4380
+      ],
+      "id": "1e94b65a-f15a-4ab3-b704-12d6a6379310",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "step2"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -760,
+        4420
+      ],
+      "id": "05750675-f26e-4357-8657-c85b8f3a4e33",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.2,
+      "position": [
+        -540,
+        4540
+      ],
+      "id": "f19352aa-c651-4645-8edb-71d64435c803",
+      "name": "Code Tool"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n\nconst codeOutput = $('Code').first().json.output;\n\nconst appendedText = \"give only main character images, not the scene\";\n\n// Assuming output is in `output` field\nconst rawtext = `${codeOutput} \\n${appendedText}`;\nconst combinedText = rawtext.replace(/\"/g, '\\\\\"').replace(/\\n/g, '\\\\n');\n\nreturn [\n  {\n    json: {\n      combinedPrompt: combinedText\n    }\n  }\n];"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        4540
+      ],
+      "id": "6a07a597-3503-4757-8dd8-715d447dc108",
+      "name": "Code Tool1"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"characters\": [\n      \n    ],\n  \"prompts\": [\n    \n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        -100
+      ],
+      "id": "b89f6a89-5665-4282-b472-1f07cd69c4de",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const instances = $json.instances;\n\n\nreturn instances[0];\n\nconsole.log(instances);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        4560
+      ],
+      "id": "ec2c0ebf-4ea6-4f46-9ff4-768bb90fd9df",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "16f8d7f7-af90-4783-af0a-c80b0d797844",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        -380
+      ],
+      "id": "b236cbfc-9ab5-4f96-a791-4b62b038ba8a",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1660,
+        -100
+      ],
+      "id": "7b00de2c-a9fe-43a1-9bb3-ece852603441",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        240
+      ],
+      "id": "eb76dfab-4aac-4a67-9453-74da5f6009ca",
+      "name": "Wait",
+      "webhookId": "de4dd2f1-3a99-4a5d-8b5f-ff5a515c96f9",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        4580
+      ],
+      "id": "7f0826ea-fa03-4944-a0f5-6123daa02518",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"story\": \"string\",\n  \"epidosdes\": [\n    {\n      \"title\": \"string\",\n      \"scenes\": [\n        \"string\"\n      ]\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -160
+      ],
+      "id": "df3517cc-53e6-4355-8c88-ae130543b5f0",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b71ae6db-b32f-473d-95fc-655bb8ba8308",
+              "name": "chatInput",
+              "value": "={{ $json.chatInput }} \\n\n\nAbove line is a high level story plot. Based on it, please help me with draft a story which clearly talks about all the characters in the story and then break down that story in 10 episodes. Each episode should be around 60 seconds and each episode should have around 8-10 scenes. Using the scenes, I will then generate images for each scene using AI tool. ",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -420,
+        -380
+      ],
+      "id": "821bd722-ee8f-4c0f-aebc-06502391d451",
+      "name": "Refine User Prompt"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -200,
+        -380
+      ],
+      "id": "3971c99c-bebb-4839-91d1-95422c51dffa",
+      "name": "Generate a story"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -380
+      ],
+      "id": "894134bb-135d-4adc-818b-620fb627fe39",
+      "name": "Refine"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output.story_plot }}\nUsing this story draft, list down all the characters and a small description of the each character. Give one prompt to generate the images of the each main characters need not be an episode specific.\n\nmake sure to give prompts in an array with prompts is the array name and characters are the charcters array name.\n\ngive the output in a proper json. validation of should be passed.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        500,
+        -380
+      ],
+      "id": "9fe87b9a-ee75-4d3f-9184-9ec5f83a79b8",
+      "name": "Generate characters"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $input.first().json.output;\n\nif (!output.characters || !Array.isArray(output.characters)) {\n  throw new Error(\"No valid 'characters' array found in input.\");\n}\n\nconst instances = output.prompts.map(character => {\n  const prompt = character.trim();\n\n  \n\n  return {\n    prompt: `Based on this ${prompt}, generate image for each character separately`\n  };\n});\n\nreturn [\n  {\n    json: {\n      instances: instances,\n      parameters: {\n        sampleCount: 4\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        -380
+      ],
+      "id": "a4e1d3be-9d39-42c0-bb1c-a80b7f80c619",
+      "name": "Refine1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const instances = $input.first().json.instances\n\nreturn instances.map(instance => ({\n  json: instance\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -380
+      ],
+      "id": "a6387cc2-fb55-4309-9ccb-4f1133e6e3bf",
+      "name": "Refine2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    instances: $input.first().json.prompt, // wrap current item as array\n    parameters: {\n      sampleCount: 4\n    }\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        -380
+      ],
+      "id": "a68cb1c2-786e-4b4c-bbb8-076839cd28b4",
+      "name": "Refine3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://us-central1-aiplatform.googleapis.com/v1/projects/neon-obelisk-458904-m5/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ya29.a0AW4XtxhqSAW9eOTcxFnAhGHboDAaql1lZygeCVsk2uQPIXAgRIHV8WcKd3CbT7QxFk--cdQKosfKMYWZB6f1Sv20Q-RCOKZmgDEIvY9X1-U-7xA0uEydb6q416AF6LUFYjkbgYyI5PWCoMYNNqDCto0YeuAZ-qLQeKOTRcLpvwultjcaCgYKATASARMSFQHGX2Mi4RZyeEV2avWYI0VkDzkGBw0182"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"instances\": [\n    {\n      \"prompt\": \"{{ $json.instances }}\"\n    }\n  ],\n  \"parameters\": {\n    \"sampleCount\": 1\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        -380
+      ],
+      "id": "0c89d6d0-3091-4fc5-8297-03da0380015e",
+      "name": "Imagen API"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.output;\n\n// Extract story plot\nconst storyPlot = data.story_plot;\n\n// Get episode with episode_number === 1\nconst episode = data.episodes.find(e => e.episode_number === 1);\n\nlet episodeContent = '';\nif (episode) {\n  const title = episode.title;\n  const scenes = episode.scenes.join('\\n');\n\n  episodeContent = `\\n\\nEpisode 1: ${title}\\n${scenes}`;\n}\n\n// Combine the two into one string\nconst combined = `${storyPlot}${episodeContent}`;\n\nreturn [\n  {\n    json: {\n      prompt: combined\n    }\n  }\n];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        -100
+      ],
+      "id": "49271acb-84a3-4bfa-9b55-83c9985bd0c6",
+      "name": "Refine4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const promptRaw = $input.first().json.prompt;\nconst imageBase64 = $input.first().json.predictions[0].bytesBase64Encoded;\n\n// Escape prompt to ensure safe transfer (especially if used in URLs or JSON strings)\nconst escapedPrompt = encodeURIComponent(promptRaw.trim());\n\n// Return the data to pass to the next node (e.g., HTTP Request)\nreturn [\n  {\n    json: {\n      prompt: escapedPrompt,\n      image: imageBase64,\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        240
+      ],
+      "id": "3240903d-988d-49e5-a305-631890ed8802",
+      "name": "Refine5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.klingai.com/v1/videos/image2video",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJmMzBjM2Q2ZjJkZjQ0OTZiOGZjMzMyMmNlOGVjZTE5ZCIsImV4cCI6MTc0NzY1NTc0OSwibmJmIjoxNzQ3NjUzOTQ0fQ.B892VU7_m63Vny5-jSm_EJhXfREvuWdq2B_HYeH1-zg"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n    \"model_name\": \"kling-v1\",\n    \"mode\": \"std\",\n    \"duration\": \"5\",\n    \"prompt\": \"{{$json.prompt }}\",\n    \"image\": \"{{ $json.image }}\",\n    \"cfg_scale\": 0.5\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        240
+      ],
+      "id": "22e50ca3-06ee-4798-b5f1-98823bdcc204",
+      "name": "Video Generation"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.klingai.com/v1/videos/image2video/{{ $json.data.task_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJmMzBjM2Q2ZjJkZjQ0OTZiOGZjMzMyMmNlOGVjZTE5ZCIsImV4cCI6MTc0NzYzOTEwNywibmJmIjoxNzQ3NjM3MzAyfQ.b1nicX9EVdpH_u1qdwSpz4jHK_1HM5m_cMlAdBDL0Z0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1740,
+        240
+      ],
+      "id": "815413ad-caf6-47d0-8e77-8a2f28ae69aa",
+      "name": "Get Video"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Refine User Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate a story",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate characters",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        []
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Code Tool": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Code Tool1": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate characters",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        []
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Refine5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate a story",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refine User Prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate a story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate a story": {
+      "main": [
+        [
+          {
+            "node": "Refine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refine": {
+      "main": [
+        [
+          {
+            "node": "Generate characters",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Refine4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate characters": {
+      "main": [
+        [
+          {
+            "node": "Refine1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refine1": {
+      "main": [
+        [
+          {
+            "node": "Refine2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refine2": {
+      "main": [
+        [
+          {
+            "node": "Refine3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refine3": {
+      "main": [
+        [
+          {
+            "node": "Imagen API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Imagen API": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refine4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Refine5": {
+      "main": [
+        [
+          {
+            "node": "Video Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Generation": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "702d6ed3-1b67-4e08-b1cb-bad862ebec06",
+  "meta": {
+    "templateId": "self-building-ai-agent",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a8d4012dc3caac51c6500b79ce5296d6eff13e3c34cb3f25b40ebc00d528576e"
+  },
+  "id": "FFQtx1oUyy7QDcTl",
+  "tags": []
+}
